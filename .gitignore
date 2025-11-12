@@ -1,4 +1,5 @@
 example/*
+bin/*
 *.log
 CLAUDE.md  
 

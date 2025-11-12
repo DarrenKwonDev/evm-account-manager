@@ -16,13 +16,15 @@ type model struct {
 	keymap    keyMap
 	width     int
 	height    int
+	focused   Pane
 }
 
 func NewModel() model {
 	return model{
-		leftPane:  "left",
+		leftPane:  "left left  left  left  left  left  left  left  left  left  left ",
 		rightPane: "right",
 		keymap:    keys,
+		focused:   RightPane,
 	}
 }
 
@@ -60,7 +62,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.quit):
 			return m, tea.Quit
 		case key.Matches(msg, m.keymap.focus):
-			return m, tea.Quit
+			if m.focused == LeftPane {
+				m.focused = RightPane
+			} else {
+				m.focused = LeftPane
+			}
+			return m, nil
 		}
 
 	case tea.WindowSizeMsg:
@@ -76,21 +83,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 
 	leftWidth := m.width / 4
-	rightWidth := m.width - leftWidth - 6
+	rightWidth := m.width - leftWidth - 4
 
-	left := lipgloss.NewStyle().
-		Width(leftWidth).
-		Padding(1, 1).
-		Border(lipgloss.RoundedBorder()).
-		MaxHeight(m.height - 20).
-		Render(m.leftPane)
+	basePaneStyle := lipgloss.NewStyle().MaxHeight(m.height - 20)
+	focusedStyle := basePaneStyle.Border(lipgloss.NormalBorder()).BorderForeground(focusColor)
+	notFocusedStyle := basePaneStyle.Border(lipgloss.NormalBorder())
 
-	right := lipgloss.NewStyle().
-		Width(rightWidth).
-		Padding(1, 1).
-		Border(lipgloss.RoundedBorder()).
-		MaxHeight(m.height - 20).
-		Render(m.rightPane)
+	var left, right string
+
+	// 덮어씌우기
+	if m.focused == LeftPane {
+		left = focusedStyle.Width(leftWidth).Render(m.leftPane)
+		right = notFocusedStyle.Width(rightWidth).Render(m.rightPane)
+	} else {
+		left = notFocusedStyle.Width(leftWidth).Render(m.leftPane)
+		right = focusedStyle.Width(rightWidth).Render(m.rightPane)
+	}
 
 	content := lipgloss.JoinHorizontal(lipgloss.Left, left, right)
 
