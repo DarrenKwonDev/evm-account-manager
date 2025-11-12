@@ -1,7 +1,8 @@
 example/*
 bin/*
 *.log
-CLAUDE.md  
+CLAUDE.md
+*.db
 
 # Created by https://www.toptal.com/developers/gitignore/api/go
 # Edit at https://www.toptal.com/developers/gitignore?templates=go

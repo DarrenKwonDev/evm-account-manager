@@ -2,18 +2,21 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"drkup/account-tracker/onchain"
 )
 
 type model struct {
 	leftPane  string
 	rightPane string
 	keymap    keyMap
+	help      help.Model
 	width     int
 	height    int
 	focused   Pane
@@ -119,14 +122,18 @@ func main() {
 	}
 	defer f.Close()
 
-	log.Println("start")
+	addr, pk, err := onchain.CreateAccount()
+	if err != nil {
+		os.Exit(1)
+	}
+	fmt.Printf("%s \n%s \n", addr, pk)
 
 	// create program and run
-	p := tea.NewProgram(NewModel(), tea.WithAltScreen())
-	if p != nil {
-		if _, err := p.Run(); err != nil {
-			fmt.Println("Error while running program:", err)
-			os.Exit(1)
-		}
-	}
+	// p := tea.NewProgram(NewModel(), tea.WithAltScreen())
+	// if p != nil {
+	// 	if _, err := p.Run(); err != nil {
+	// 		fmt.Println("Error while running program:", err)
+	// 		os.Exit(1)
+	// 	}
+	// }
 }
