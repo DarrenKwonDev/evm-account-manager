@@ -42,7 +42,6 @@ func NewAccountForm() AccountForm {
 	label.CharLimit = 100
 	label.Width = 20
 
-	// textarea 초기화
 	memo := textarea.New()
 	memo.Placeholder = "Memo"
 	memo.CharLimit = 500

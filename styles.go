@@ -3,8 +3,7 @@ package main
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	focusColor      = lipgloss.Color("#f0b90b")
-	inputFocusColor = lipgloss.Color("#f9e79f")
+	focusColor = lipgloss.Color("#f0b90b")
 
 	SmallPadding = 4
 )

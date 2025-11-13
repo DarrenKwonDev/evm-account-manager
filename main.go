@@ -108,16 +108,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.leftPane.blurAll()
 			}
 
+			return m, nil
+
 		case key.Matches(msg, m.keymap.enter):
 			// focus가 없는 상태라면 첫번째 textinput에 포커스를 주고, 이미 포커스가 있으면 다음 input이동
 			if m.focusedPane == LeftPane {
 				switch m.leftPane.LastFocused {
 				case NoFocus:
 					m.leftPane.ActivateFirst()
+					return m, nil
 				case MemoField:
-					cmds = append(cmds, m.leftPane.Update(msg))
+					// textarea의 경우엔 enter의 줄바꿈 동작을 그대로 유지해야 한다.
+					return m, m.leftPane.Update(msg)
 				default:
 					m.leftPane.MoveFocus(1)
+					return m, nil
 				}
 			}
 
@@ -127,6 +132,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switch m.leftPane.LastFocused {
 				case NoFocus:
 					m.focusedPane = RightPane
+					return m, nil
 				default:
 					m.leftPane.MoveFocus(1)
 					return m, nil
@@ -138,14 +144,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keymap.down):
 			if m.focusedPane == LeftPane {
-				m.leftPane.MoveFocus(1)
-				return m, nil
+				if m.leftPane.LastFocused != MemoField {
+					m.leftPane.MoveFocus(1)
+					return m, nil
+				}
 			}
 
 		case key.Matches(msg, m.keymap.up):
 			if m.focusedPane == LeftPane {
-				m.leftPane.MoveFocus(-1)
-				return m, nil
+				if m.leftPane.LastFocused != MemoField {
+					m.leftPane.MoveFocus(-1)
+					return m, nil
+				}
 			}
 		}
 
