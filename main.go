@@ -1,6 +1,8 @@
 package main
 
 import (
+	"drkup/account-tracker/db"
+	"drkup/account-tracker/service"
 	"fmt"
 	"log"
 	"os"
@@ -98,11 +100,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case AccountCreatedMsg:
-		// 계정 생성 메시지 처리
-		// TODO: 실제 계정 생성 로직 추가 (onchain.CreateAccount 호출)
-		log.Printf("계정 생성됨: %+v\n", msg)
 
-		// 폼 초기화
+		// 1. create event
+		account, err := service.GetAccountService().CreateAccount(
+			msg.Alias,
+			msg.Chain,
+			msg.Label,
+			msg.Memo,
+		)
+		if err != nil {
+			log.Printf("계정 생성 실패: %v", err)
+			// 실패 처리 (에러 메시지 표시 등)
+			return m, nil
+		}
+		log.Printf("계정 생성 성공: %+v", account)
+		// 2. update right panel to draw new account
+
+		// 3. 폼 초기화
 		m.leftPane = NewAccountForm()
 		if m.width > 0 {
 			m.leftPane.SetWidth(LeftWidthFromWnd(m.width) - SmallPadding)
@@ -134,10 +148,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					// textarea의 경우엔 enter의 줄바꿈 동작을 그대로 유지해야 한다.
 					return m, m.leftPane.Update(msg)
 				case CreateField:
-					// 버튼 클릭 처리
-					if cmd := m.leftPane.CreateButton.Update(msg); cmd != nil {
-						return m, cmd
+
+					return m, func() tea.Msg {
+						return AccountCreatedMsg{
+							Alias: m.leftPane.AliasInput.Value(),
+							Chain: m.leftPane.ChainInput.Value(),
+							Label: m.leftPane.LabelInput.Value(),
+							Memo:  m.leftPane.MemoInput.Value(),
+						}
 					}
+
 				default:
 					m.leftPane.MoveFocus(1)
 					return m, nil
@@ -239,11 +259,15 @@ func main() {
 		f.Close()
 	}()
 
-	// addr, pk, err := onchain.CreateAccount()
-	// if err != nil {
-	// os.Exit(1)
-	// }
-	// fmt.Printf("%s \n%s \n", addr, pk)
+	database, err := db.New("app.db")
+	if err != nil {
+		log.Printf("DB 초기화 실패: %v", err)
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	// AccountService 초기화
+	service.InitAccountService(database)
 
 	// create program and run
 	p := tea.NewProgram(NewModel(), tea.WithAltScreen())

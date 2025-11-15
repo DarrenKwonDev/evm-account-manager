@@ -10,7 +10,6 @@ type Button struct {
 	text    string
 	width   int
 	focused bool
-	onClick func() tea.Cmd
 }
 
 // NewButton creates a new button with the specified text
@@ -32,11 +31,6 @@ func (b *Button) Blur() {
 	b.focused = false
 }
 
-// SetOnClick sets the callback function when button is clicked
-func (b *Button) SetOnClick(onClick func() tea.Cmd) {
-	b.onClick = onClick
-}
-
 // IsFocused returns true if button is focused
 func (b *Button) IsFocused() bool {
 	return b.focused
@@ -55,23 +49,6 @@ func (b Button) Init() tea.Cmd {
 func (b Button) View() string {
 	style := b.getStyle()
 	return style.Render(b.text)
-}
-
-// Update handles button input messages
-func (b *Button) Update(msg tea.Msg) tea.Cmd {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		// Handle key messages when button is focused
-		if b.focused {
-			switch msg.Type {
-			case tea.KeyEnter, tea.KeySpace:
-				if b.onClick != nil {
-					return b.onClick()
-				}
-			}
-		}
-	}
-	return nil
 }
 
 // getStyle returns the appropriate lipgloss style based on button focus

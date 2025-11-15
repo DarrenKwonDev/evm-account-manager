@@ -60,16 +60,6 @@ func NewAccountForm() AccountForm {
 
 	// 버튼 초기화
 	createBtn := NewButton("Create")
-	createBtn.SetOnClick(func() tea.Cmd {
-		return func() tea.Msg {
-			return AccountCreatedMsg{
-				Alias: alias.Value(),
-				Chain: chain.Value(),
-				Label: label.Value(),
-				Memo:  memo.Value(),
-			}
-		}
-	})
 
 	return AccountForm{
 		AliasInput:   alias,
@@ -126,7 +116,7 @@ func (af *AccountForm) Update(msg tea.Msg) tea.Cmd {
 		af.MemoInput, cmd = af.MemoInput.Update(msg)
 	case CreateField:
 		// 버튼은 포인터를 직접 수정하므로 cmd만 반환
-		cmd = af.CreateButton.Update(msg)
+		// cmd = af.CreateButton.Update(msg)
 	}
 
 	return cmd
