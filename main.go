@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -96,6 +97,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case AccountCreatedMsg:
+		// 계정 생성 메시지 처리
+		// TODO: 실제 계정 생성 로직 추가 (onchain.CreateAccount 호출)
+		log.Printf("계정 생성됨: %+v\n", msg)
+
+		// 폼 초기화
+		m.leftPane = NewAccountForm()
+		if m.width > 0 {
+			m.leftPane.SetWidth(LeftWidthFromWnd(m.width) - SmallPadding)
+		}
+
+		return m, nil
 
 	case tea.KeyMsg:
 		switch {
@@ -120,6 +133,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case MemoField:
 					// textarea의 경우엔 enter의 줄바꿈 동작을 그대로 유지해야 한다.
 					return m, m.leftPane.Update(msg)
+				case CreateField:
+					// 버튼 클릭 처리
+					if cmd := m.leftPane.CreateButton.Update(msg); cmd != nil {
+						return m, cmd
+					}
 				default:
 					m.leftPane.MoveFocus(1)
 					return m, nil
@@ -216,7 +234,10 @@ func main() {
 		fmt.Println("fatal:", err)
 		os.Exit(1)
 	}
-	defer f.Close()
+	defer func() {
+		log.Println("Exit")
+		f.Close()
+	}()
 
 	// addr, pk, err := onchain.CreateAccount()
 	// if err != nil {

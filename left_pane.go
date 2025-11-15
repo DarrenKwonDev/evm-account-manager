@@ -8,6 +8,14 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// AccountCreatedMsg is sent when user clicks Create button
+type AccountCreatedMsg struct {
+	Alias string
+	Chain string
+	Label string
+	Memo  string
+}
+
 type AccountFormField int
 
 const (
@@ -16,14 +24,16 @@ const (
 	ChainField
 	LabelField
 	MemoField
+	CreateField
 )
 
 type AccountForm struct {
-	AliasInput  textinput.Model
-	ChainInput  textinput.Model
-	LabelInput  textinput.Model
-	MemoInput   textarea.Model
-	LastFocused AccountFormField
+	AliasInput   textinput.Model
+	ChainInput   textinput.Model
+	LabelInput   textinput.Model
+	MemoInput    textarea.Model
+	CreateButton Button
+	LastFocused  AccountFormField
 }
 
 func NewAccountForm() AccountForm {
@@ -48,12 +58,26 @@ func NewAccountForm() AccountForm {
 	memo.SetWidth(20)
 	memo.SetHeight(4)
 
+	// 버튼 초기화
+	createBtn := NewButton("Create")
+	createBtn.SetOnClick(func() tea.Cmd {
+		return func() tea.Msg {
+			return AccountCreatedMsg{
+				Alias: alias.Value(),
+				Chain: chain.Value(),
+				Label: label.Value(),
+				Memo:  memo.Value(),
+			}
+		}
+	})
+
 	return AccountForm{
-		AliasInput:  alias,
-		ChainInput:  chain,
-		LabelInput:  label,
-		MemoInput:   memo,
-		LastFocused: NoFocus,
+		AliasInput:   alias,
+		ChainInput:   chain,
+		LabelInput:   label,
+		MemoInput:    memo,
+		CreateButton: createBtn,
+		LastFocused:  NoFocus,
 	}
 }
 
@@ -61,19 +85,28 @@ func (af AccountForm) View() string {
 	var builder strings.Builder
 
 	builder.WriteString("Alias:\n")
-	builder.WriteString(af.AliasInput.View())
+	aliasView := af.AliasInput.View()
+	builder.WriteString(aliasView)
 	builder.WriteString("\n\n")
 
 	builder.WriteString("Chain:\n")
-	builder.WriteString(af.ChainInput.View())
+	chainView := af.ChainInput.View()
+	builder.WriteString(chainView)
 	builder.WriteString("\n\n")
 
 	builder.WriteString("Label:\n")
-	builder.WriteString(af.LabelInput.View())
+	labelView := af.LabelInput.View()
+	builder.WriteString(labelView)
 	builder.WriteString("\n\n")
 
 	builder.WriteString("Memo:\n")
-	builder.WriteString(af.MemoInput.View())
+	memoView := af.MemoInput.View()
+	builder.WriteString(memoView)
+	builder.WriteString("\n\n")
+
+	// 버튼 표시
+	buttonView := af.CreateButton.View()
+	builder.WriteString(buttonView)
 
 	return builder.String()
 }
@@ -91,6 +124,9 @@ func (af *AccountForm) Update(msg tea.Msg) tea.Cmd {
 		af.LabelInput, cmd = af.LabelInput.Update(msg)
 	case MemoField:
 		af.MemoInput, cmd = af.MemoInput.Update(msg)
+	case CreateField:
+		// 버튼은 포인터를 직접 수정하므로 cmd만 반환
+		cmd = af.CreateButton.Update(msg)
 	}
 
 	return cmd
@@ -98,7 +134,7 @@ func (af *AccountForm) Update(msg tea.Msg) tea.Cmd {
 
 func (af *AccountForm) MoveFocus(direction int) {
 	fields := []AccountFormField{AliasField, ChainField, LabelField,
-		MemoField}
+		MemoField, CreateField}
 
 	// 현재 포커스된 필드 인덱스 찾기
 	currentIndex := -1
@@ -125,6 +161,7 @@ func (af *AccountForm) blurAll() {
 	af.ChainInput.Blur()
 	af.LabelInput.Blur()
 	af.MemoInput.Blur()
+	af.CreateButton.Blur()
 
 	af.LastFocused = NoFocus
 }
@@ -139,6 +176,8 @@ func (af *AccountForm) focusField(field AccountFormField) {
 		af.LabelInput.Focus()
 	case MemoField:
 		af.MemoInput.Focus()
+	case CreateField:
+		af.CreateButton.Focus()
 	}
 }
 
@@ -153,4 +192,5 @@ func (af *AccountForm) SetWidth(width int) {
 	af.ChainInput.Width = width
 	af.LabelInput.Width = width
 	af.MemoInput.SetWidth(width)
+	af.CreateButton.SetWidth(width)
 }
